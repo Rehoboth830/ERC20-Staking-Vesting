@@ -1,0 +1,40 @@
+@reference "tailwindcss";
+
+.poolCard {
+  @apply bg-gray-900 p-5 rounded-xl border border-amber-400 relative overflow-hidden;
+  box-shadow: 0 0 10px #ffd700, 0 0 20px #ffbf00;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.poolCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, #ffd70033, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.poolCard:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 0 20px #ffd700, 0 0 40px #ffbf00;
+}
+
+.poolCard:hover::after {
+  opacity: 0.4;
+}
+
+.poolName {
+  @apply text-xl font-bold text-yellow-400 mb-2 tracking-wide;
+  text-shadow: 0 0 10px #ffd700, 0 0 20px #ffbf00;
+}
+
+.poolDetails {
+  @apply text-white text-sm opacity-80;
+}
+
+.poolActions {
+  @apply mt-4 flex gap-3;
+}

@@ -1,0 +1,6 @@
+User -> LionEagleStakingManager -> LEAG Token
+                               -> VestingLEAG -> User
+Roles/Admins:
+DEFAULT_ADMIN_ROLE -> LEAG, StakingManager, VestingLEAG
+MINTER_ROLE -> LEAG
+BURNER_ROLE -> LEAG

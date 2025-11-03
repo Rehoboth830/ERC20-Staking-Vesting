@@ -1,0 +1,41 @@
+/* Button.module.css */
+
+/* 🔥 Lion–Eagle glowing button */
+.button {
+  @apply px-4 py-2 rounded-lg font-bold bg-yellow-500 text-black transition-all duration-300;
+  
+  /* Base glow */
+  box-shadow: 0 0 10px #FFD700, 0 0 20px #FFBF00;
+
+  /* Subtle pulsing aura */
+  animation: glowPulse 2s infinite ease-in-out;
+}
+
+/* Hover state: grow + intensify glow */
+.button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #FFD700, 0 0 30px #FFBF00;
+}
+
+/* Active/pressed state: tactile feedback */
+.button:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 8px #FFD700, 0 0 16px #FFBF00;
+}
+
+/* Focus state: keyboard accessibility + glow */
+.button:focus {
+  outline: 2px solid #FFD700;
+  outline-offset: 2px;
+  box-shadow: 0 0 25px #FFD700, 0 0 40px #FFBF00;
+}
+
+/* Keyframes for subtle continuous glow */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px #FFD700, 0 0 20px #FFBF00;
+  }
+  50% {
+    box-shadow: 0 0 15px #FFD700, 0 0 25px #FFBF00;
+  }
+}

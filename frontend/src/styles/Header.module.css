@@ -1,0 +1,70 @@
+/* Header.module.css */
+
+/* 🦁 Global Pulse Animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    text-shadow: 0 0 8px #FFD700, 0 0 20px #FFBF00;
+  }
+  50% {
+    text-shadow: 0 0 15px #FFD700, 0 0 30px #FFBF00;
+  }
+}
+
+.header {
+  @apply flex items-center justify-between px-6 py-4 bg-black/90 border-b border-amber-500 shadow-[0_0_15px_#FFD700,0_0_30px_#FFBF00] backdrop-blur-sm;
+  z-index: 50;
+  position: relative;
+}
+
+/* Logo with animated glow & hover scale */
+.logo {
+  @apply text-2xl md:text-3xl font-bold text-yellow-400 cursor-pointer transition-transform duration-300;
+  animation: pulse-glow 2.5s infinite ease-in-out;
+}
+
+.logo:hover {
+  transform: scale(1.1);
+  text-shadow: 0 0 20px #FFD700, 0 0 40px #FFBF00;
+}
+
+/* Navigation Links */
+.navLinks {
+  @apply flex gap-6;
+}
+
+.navLink {
+  @apply text-white text-lg font-semibold transition-all duration-300;
+  position: relative;
+}
+
+.navLink::after {
+  content: '';
+  @apply block h-0.5 bg-amber-400 absolute left-0 bottom-0 w-0 transition-all duration-300;
+}
+
+.navLink:hover::after {
+  @apply w-full;
+}
+
+.navLink:hover {
+  color: #FFD700;
+  text-shadow: 0 0 10px #FFD700, 0 0 20px #FFBF00;
+  transform: scale(1.05);
+}
+
+/* Accessibility: keyboard focus */
+.navLink:focus-visible {
+  outline: 2px solid #FFD700;
+  outline-offset: 3px;
+  text-shadow: 0 0 10px #FFD700, 0 0 20px #FFBF00;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .header {
+    @apply flex-col gap-3 px-4 py-3;
+  }
+  .navLinks {
+    @apply flex-col gap-2 w-full items-center;
+  }
+}

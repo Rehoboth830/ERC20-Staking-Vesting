@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "types": ["node", "hardhat", "@openzeppelin/hardhat-upgrades", "react", "react-dom"],
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["frontend/src/components/*"],
+      "@lib/*": ["frontend/src/lib/*"],
+      "@hooks/*": ["frontend/src/lib/hooks/*"]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "moduleResolution": "node",
+    "isolatedModules": true
+  },
+  "include": [
+    "./scripts",
+    "./test",
+    "./typechain",
+    "./contracts",
+    "./hardhat.config.ts",
+    "./frontend/src/**/*"
+  ],
+  "exclude": ["node_modules"]
+}

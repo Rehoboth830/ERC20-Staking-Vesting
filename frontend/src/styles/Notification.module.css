@@ -1,0 +1,51 @@
+/* Notification.module.css */
+
+/* Container for stacked notifications */
+.notificationContainer {
+  @apply fixed top-4 right-4 z-50 flex flex-col gap-3;
+}
+
+/* Base notification style */
+.notification {
+  @apply p-4 rounded-xl flex items-center justify-between text-white font-semibold relative overflow-hidden;
+  background: #1f1f1f; /* Dark base for Lion–Eagle theme */
+  border: 2px solid #FFD700;
+  box-shadow: 0 0 15px #FFD700, 0 0 30px #FFBF00, 0 0 45px #FFBF00;
+  animation: slideIn 0.4s ease-out, pulseGlow 2.5s infinite alternate;
+}
+
+/* Variants */
+.notification.success {
+  @apply bg-green-700 border-green-400;
+}
+.notification.error {
+  @apply bg-red-700 border-red-500;
+}
+.notification.info {
+  @apply bg-amber-700 border-amber-400;
+}
+
+/* Message styling */
+.notification .message {
+  @apply font-semibold relative z-10;
+  text-shadow: 0 0 8px #FFD700, 0 0 15px #FFBF00;
+}
+
+/* Close button styling */
+.notification .close {
+  @apply ml-4 cursor-pointer hover:text-yellow-400 transition-colors;
+  z-index: 10;
+}
+
+/* Slide-in animation */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Subtle glowing pulse for Lion–Eagle effect */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 15px #FFD700, 0 0 30px #FFBF00; }
+  50% { box-shadow: 0 0 20px #FFD700, 0 0 40px #FFBF00; }
+  100% { box-shadow: 0 0 15px #FFD700, 0 0 30px #FFBF00; }
+}

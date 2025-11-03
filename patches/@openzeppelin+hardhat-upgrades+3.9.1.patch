@@ -1,0 +1,32 @@
+diff --git a/node_modules/@openzeppelin/hardhat-upgrades/src/validate-upgrade.ts b/node_modules/@openzeppelin/hardhat-upgrades/src/validate-upgrade.ts
+index f407c87..0539838 100644
+--- a/node_modules/@openzeppelin/hardhat-upgrades/src/validate-upgrade.ts
++++ b/node_modules/@openzeppelin/hardhat-upgrades/src/validate-upgrade.ts
+@@ -1,5 +1,5 @@
+ import { HardhatRuntimeEnvironment } from 'hardhat/types';
+-import { ContractFactory } from 'ethers';
++import { ContractFactory, ethers } from 'ethers';
+ 
+ import { ContractAddressOrInstance, getContractAddress } from './utils';
+ import {
+@@ -16,6 +16,11 @@ import {
+ import { validateBeaconImpl, validateImpl, validateProxyImpl } from './utils/validate-impl';
+ import { getDeployData } from './utils/deploy-impl';
+ 
++// ✅ Added compatibility helper for ethers v6
++// ✅ Added compatibility helper for ethers v6 (no TypeScript warnings)
++const getAddress =
++  (ethers as any)?.utils?.getAddress || ((addr: string) => (ethers as any).getAddress(addr));
++
+ export interface ValidateUpgradeFunction {
+   (origImplFactory: ContractFactory, newImplFactory: ContractFactory, opts?: ValidationOptions): Promise<void>;
+   (
+@@ -44,7 +49,7 @@ export function makeValidateUpgrade(hre: HardhatRuntimeEnvironment): ValidateUpg
+         assertStorageUpgradeSafe(origDeployData.layout, newDeployData.layout, newDeployData.fullOpts);
+       }
+     } else {
+-      const referenceAddress = await getContractAddress(referenceAddressOrImplFactory);
++      const referenceAddress = getAddress(await getContractAddress(referenceAddressOrImplFactory));
+       const { provider } = hre.network;
+       const deployData = await getDeployData(hre, newImplFactory, opts);
+       if (await isTransparentOrUUPSProxy(provider, referenceAddress)) {

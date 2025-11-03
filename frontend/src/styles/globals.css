@@ -1,0 +1,166 @@
+/* Tailwind base layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --------------------------------
+   Custom Theme Variables
+--------------------------------- */
+:root {
+  --le-bg-black: #0a0a0a;
+  --le-lion-black: #0b0b0b;
+  --le-lion-white: #f5f5f5;
+  --le-lion-gray: #1f1f1f;
+  --le-gold: #ffd700;
+  --le-amber: #ffbf00;
+  --le-glow: 0 0 10px var(--le-gold), 0 0 20px var(--le-amber);
+  --le-glow-hover: 0 0 15px var(--le-gold), 0 0 30px var(--le-amber);
+  --le-font-primary: 'Poppins', sans-serif;
+}
+
+/* --------------------------------
+   Tailwind Layers
+--------------------------------- */
+@layer base {
+  body {
+    background-color: var(--le-lion-black);
+    color: var(--le-lion-white);
+    font-family: var(--le-font-primary);
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Headings with glow and responsive sizes */
+  h1, h2, h3 {
+    font-family: var(--le-font-primary);
+    color: var(--le-gold);
+    text-shadow: var(--le-glow);
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+
+  @media (min-width: 768px) {
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 2.25rem; }
+    h3 { font-size: 2rem; }
+  }
+
+  @media (min-width: 1280px) {
+    h1 { font-size: 3rem; }
+    h2 { font-size: 2.5rem; }
+    h3 { font-size: 2.25rem; }
+  }
+
+  h4, h5, h6 {
+    font-family: var(--le-font-primary);
+    color: var(--le-gold);
+  }
+
+  a {
+    color: var(--le-amber);
+    transition: color 0.3s, text-shadow 0.3s ease-in-out;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--le-gold);
+    text-shadow: var(--le-glow-hover);
+  }
+}
+
+@layer components {
+  button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    transition: all 0.3s ease-in-out;
+    background-color: var(--le-gold);
+    color: black;
+    box-shadow: var(--le-glow);
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: var(--le-glow-hover);
+  }
+
+  button:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 12px var(--le-gold), 0 0 20px var(--le-amber);
+  }
+
+  .card {
+    background-color: var(--le-lion-gray);
+    border-radius: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--le-amber);
+    box-shadow: var(--le-glow);
+    transition: all 0.5s ease-in-out;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--le-glow-hover);
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.7);
+  }
+
+  .modal-content {
+    background-color: var(--le-lion-gray);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 2px solid var(--le-gold);
+    box-shadow: var(--le-glow);
+    transition: all 0.5s ease-in-out;
+  }
+
+  input, select, textarea {
+    background-color: #111;
+    color: var(--le-lion-white);
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid #555;
+    outline: none;
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* ✅ Updated focus glow */
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--le-amber);
+    box-shadow: var(--le-glow-hover);
+  }
+
+  .text-glow {
+    text-shadow: var(--le-glow);
+  }
+}
+
+/* --------------------------------
+   Scrollbar Styling
+--------------------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--le-bg-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--le-gold);
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--le-amber);
+}

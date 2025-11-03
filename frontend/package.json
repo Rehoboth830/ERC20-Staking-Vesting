@@ -1,0 +1,58 @@
+{
+  "name": "erc20-staking",
+  "version": "1.0.0",
+  "description": "Lion-Eagle ERC20, Vesting & Staking Manager",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "compile": "hardhat compile",
+    "typechain": "hardhat typechain",
+    "deploy": "npx hardhat run scripts/deploy.ts --network hardhat",
+    "test": "hardhat test",
+    "clean": "hardhat clean",
+    "postinstall": "patch-package"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "4.9.6",
+    "@rainbow-me/rainbowkit": "2.2.9",
+    "@wagmi/core": "2.22.1",
+    "dotenv": "17.2.3",
+    "ethers": "6.15.0",
+    "framer-motion": "12.23.24",
+    "next": "15.5.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "viem": "2.38.2",
+    "wagmi": "2.18.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "6.1.0",
+    "@openzeppelin/hardhat-upgrades": "3.9.1",
+    "@typechain/ethers-v6": "0.5.1",
+    "@typechain/hardhat": "9.1.0",
+    "@types/node": "24.7.2",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@typescript-eslint/eslint-plugin": "8.46.1",
+    "@typescript-eslint/parser": "8.46.1",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "15.5.5",
+    "eslint-config-prettier": "9.1.2",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.0.0",
+    "hardhat": "2.26.3",
+    "patch-package": "8.0.1",
+    "postcss": "^8.5.6",
+    "postinstall-postinstall": "2.1.0",
+    "tailwindcss": "^4.1.14",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}

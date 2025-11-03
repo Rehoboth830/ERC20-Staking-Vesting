@@ -1,0 +1,48 @@
+.modalOverlay {
+  @apply fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm;
+}
+
+.modalContent {
+  @apply bg-gray-900 p-6 rounded-2xl border border-amber-400 w-11/12 max-w-lg relative overflow-hidden;
+  box-shadow: 0 0 15px #ffd700, 0 0 30px #ffbf00, 0 0 60px #ffbf00;
+  animation: modalFadeIn 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.modalHeader {
+  @apply flex justify-between items-center mb-4;
+}
+
+.modalTitle {
+  @apply text-2xl font-bold text-amber-400 tracking-wide;
+  text-shadow: 0 0 10px #FFD700;
+}
+
+.modalClose {
+  @apply text-white text-2xl cursor-pointer transition-all duration-300;
+}
+
+.modalClose:hover {
+  color: #FFD700;
+  transform: scale(1.2) rotate(90deg);
+}
+
+.modalBody {
+  @apply text-white text-sm;
+}
+
+/* Aura animation */
+.modalAura {
+  @apply absolute inset-0 rounded-2xl;
+  background: radial-gradient(circle, rgba(255,215,0,0.15) 0%, transparent 80%);
+  animation: auraPulse 2s infinite ease-in-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes auraPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}

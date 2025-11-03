@@ -1,0 +1,60 @@
+/* Forms.module.css - Lion–Eagle 100/100 version */
+
+/* Shared input styles for input, select, textarea */
+.input, .select, .textarea {
+  @apply bg-gray-900 text-white p-3 rounded-lg border border-gray-700 outline-none 
+         focus:border-yellow-400 focus:shadow-[0_0_12px_#FFD700] 
+         transition-all duration-300 ease-in-out
+         placeholder-yellow-300/70;
+  font-size: 1rem;
+  width: 100%;
+}
+
+/* Textarea auto-expand and smooth resizing */
+.textarea {
+  @apply resize-none min-h-[120px] max-h-[300px];
+}
+
+/* Placeholder styling */
+.input::placeholder,
+.select::placeholder,
+.textarea::placeholder {
+  @apply text-yellow-300/60 italic;
+}
+
+/* Label styling */
+.label {
+  @apply text-yellow-400 font-bold mb-2 block tracking-wide text-lg;
+}
+
+/* Error state (optional) */
+.input-error, .select-error, .textarea-error {
+  @apply border-red-500 shadow-[0_0_10px_#FF4500];
+}
+
+/* Disabled state */
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  @apply bg-gray-800 text-gray-400 cursor-not-allowed;
+}
+
+/* Hover effect for inputs & selects */
+.input:hover, .select:hover, .textarea:hover {
+  @apply border-yellow-300 shadow-[0_0_8px_#FFD700];
+}
+
+/* Smooth focus for label + input association (floating label effect optional) */
+.label-floating {
+  @apply absolute text-yellow-400 text-sm left-3 top-2 transition-all duration-300 ease-in-out;
+}
+
+/* Responsive spacing */
+@media (max-width: 640px) {
+  .input, .select, .textarea {
+    @apply p-2 text-sm;
+  }
+  .label {
+    @apply text-base;
+  }
+}

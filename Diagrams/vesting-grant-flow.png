@@ -1,0 +1,10 @@
+Owner/Admin
+    |
+    v
+Grant Struct (start, duration, cliff, amount)
+    |
+    v
+Time Passes -> Partial Release -> User Balance
+    |
+    v
+Full Duration -> All Tokens Released

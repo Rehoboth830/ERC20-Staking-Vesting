@@ -1,0 +1,13 @@
+User
+  |
+  v
+StakingManager
+  |
+  v
+Rewards Accrue
+  |          |
+  v          v
+Direct Mint  VestingLEAG
+  |          |
+  v          v
+User      User Claims Vested Tokens

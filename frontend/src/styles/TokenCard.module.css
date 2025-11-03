@@ -1,0 +1,74 @@
+/* TokenCard.module.css */
+.card {
+  @apply bg-gray-900 p-4 rounded-xl border border-amber-400 shadow-lg relative overflow-hidden;
+  box-shadow: 0 0 10px #ffd700, 0 0 20px #ffbf00;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(255, 191, 0, 0.1), transparent 70%);
+  opacity: 0;
+  transform: scale(0.95);
+  transition: all 0.4s ease-in-out;
+}
+
+.card:hover::before {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 15px #ffd700, 0 0 30px #ffbf00;
+}
+
+.cardTitle {
+  @apply text-lg font-bold text-yellow-400 mb-2;
+  transition: text-shadow 0.3s ease-in-out;
+}
+
+.cardTitle:hover {
+  text-shadow: 0 0 10px #ffd700, 0 0 20px #ffbf00;
+}
+
+.cardAmount {
+  @apply text-white font-semibold text-xl;
+  transition: color 0.3s ease-in-out;
+}
+
+.cardAmount:hover {
+  color: #ffd700;
+}
+
+.cardFooter {
+  @apply mt-4 flex justify-between items-center;
+}
+
+.cardFooter button {
+  @apply px-3 py-1 rounded-lg font-semibold text-sm text-black bg-amber-400 shadow-[0_0_10px_#ffd700];
+  transition: all 0.3s ease-in-out;
+}
+
+.cardFooter button:hover {
+  @apply bg-yellow-500;
+  box-shadow: 0 0 15px #ffd700, 0 0 25px #ffbf00;
+  transform: scale(1.05);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .card {
+    @apply p-3;
+  }
+  .cardTitle {
+    @apply text-base;
+  }
+  .cardAmount {
+    @apply text-lg;
+  }
+}
