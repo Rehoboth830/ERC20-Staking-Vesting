@@ -1,6 +1,12 @@
 // src/contexts/WalletContext.tsx
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { ethers } from 'ethers';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { ethers } from "ethers";
 
 // Allow TypeScript to recognize window.ethereum
 declare global {
@@ -9,22 +15,66 @@ declare global {
   }
 }
 
-// Import ABIs from your project
-import LEAG from '../abis/LEAG.json';
-import LionEagleStakingManager from '../abis/LionEagleStakingManager.json';
-import VestingLEAG from '../abis/VestingLEAG.json';
+// ============================
+// ENV CONFIG
+// ============================
+type Network = "local" | "sepolia";
 
-// Replace with your deployed contract addresses
-const LEAG_ADDRESS = "0xYourLEAGAddress";
-const STAKING_ADDRESS = "0xYourStakingManagerAddress";
-const VESTING_ADDRESS = "0xYourVestingLEAGAddress";
+const DEFAULT_NETWORK: Network =
+  (process.env.NEXT_PUBLIC_DEFAULT_NETWORK as Network) || "sepolia";
 
+// RPCs (use environment variables if present; fall back to sensible defaults)
+const RPC: Record<Network, string> = {
+  local: process.env.NEXT_PUBLIC_LOCAL_RPC_URL || "http://127.0.0.1:8545",
+  sepolia:
+    process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org",
+};
+
+// Chain IDs
+const CHAIN: Record<Network, number> = {
+  local: Number(process.env.NEXT_PUBLIC_LOCAL_CHAIN_ID) || 1337,
+  sepolia: Number(process.env.NEXT_PUBLIC_SEPOLIA_CHAIN_ID) || 11155111,
+};
+
+// Contract addresses
+// IMPORTANT: FALLBACKS are set to the deployed Sepolia addresses you shared.
+// These will be overridden if you set the corresponding NEXT_PUBLIC_ env vars.
+const CONTRACTS: Record<
+  Network,
+  { leag: string; staking: string; vesting: string }
+> = {
+  local: {
+    leag: process.env.NEXT_PUBLIC_LOCAL_LEAG_ADDRESS || "",
+    staking: process.env.NEXT_PUBLIC_LOCAL_STAKING_ADDRESS || "",
+    vesting: process.env.NEXT_PUBLIC_LOCAL_VESTING_ADDRESS || "",
+  },
+  sepolia: {
+    leag:
+      process.env.NEXT_PUBLIC_SEPOLIA_LEAG_ADDRESS ||
+      "0xdd93F3362127D82B4BbA32eEf71973850c68b583",
+    staking:
+      process.env.NEXT_PUBLIC_SEPOLIA_STAKING_ADDRESS ||
+      "0x7b5a00E7C129120ec55Fe322FD144648724B350f",
+    vesting:
+      process.env.NEXT_PUBLIC_SEPOLIA_VESTING_ADDRESS ||
+      "0xC9F4384a31Af4Be60e3BF7F99D555bBD848eF45B",
+  },
+};
+
+// ABIs
+import LEAG from "../abis/LEAG.json";
+import LionEagleStakingManager from "../abis/LionEagleStakingManager.json";
+import VestingLEAG from "../abis/VestingLEAG.json";
+
+// ============================
+// TYPES
+// ============================
 interface WalletContextProps {
-  provider: ethers.BrowserProvider | null;
+  provider: ethers.BrowserProvider | ethers.JsonRpcProvider | null;
   signer: ethers.Signer | null;
   address: string | null;
-  account: string | null;
-  network: string | null;
+  chainId: number | null;
+  network: Network;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   loading: boolean;
@@ -33,33 +83,64 @@ interface WalletContextProps {
   vestingContract: ethers.Contract | null;
 }
 
-export const WalletContext = createContext<WalletContextProps>({
-  provider: null,
-  signer: null,
-  address: null,
-  account: null,
-  network: null,
-  connectWallet: async () => {},
-  disconnectWallet: () => {},
-  loading: false,
-  leagContract: null,
-  stakingContract: null,
-  vestingContract: null,
-});
+export const WalletContext = createContext<WalletContextProps>(
+  {} as WalletContextProps
+);
 
+// ============================
+// PROVIDER COMPONENT
+// ============================
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [provider, setProvider] =
+    useState<ethers.BrowserProvider | ethers.JsonRpcProvider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [network, setNetwork] = useState<string | null>(null);
+  const [chainId, setChainId] = useState<number | null>(null);
+  const [network, setNetwork] = useState<Network>(DEFAULT_NETWORK);
   const [loading, setLoading] = useState<boolean>(false);
-  const [leagContract, setLEAGContract] = useState<ethers.Contract | null>(null);
-  const [stakingContract, setStakingContract] = useState<ethers.Contract | null>(null);
-  const [vestingContract, setVestingContract] = useState<ethers.Contract | null>(null);
 
+  const [leagContract, setLEAGContract] = useState<ethers.Contract | null>(
+    null
+  );
+  const [stakingContract, setStakingContract] =
+    useState<ethers.Contract | null>(null);
+  const [vestingContract, setVestingContract] =
+    useState<ethers.Contract | null>(null);
+
+  // ======================================
+  // Initialize STATIC RPC provider
+  // (works even WITHOUT wallet connected)
+  // ======================================
+  useEffect(() => {
+    const rpcProvider = new ethers.JsonRpcProvider(RPC[DEFAULT_NETWORK]);
+    setProvider(rpcProvider);
+
+    // Bind read-only contracts with RPC provider
+    setLEAGContract(
+      new ethers.Contract(CONTRACTS[DEFAULT_NETWORK].leag, LEAG.abi, rpcProvider)
+    );
+    setStakingContract(
+      new ethers.Contract(
+        CONTRACTS[DEFAULT_NETWORK].staking,
+        LionEagleStakingManager.abi,
+        rpcProvider
+      )
+    );
+    setVestingContract(
+      new ethers.Contract(
+        CONTRACTS[DEFAULT_NETWORK].vesting,
+        VestingLEAG.abi,
+        rpcProvider
+      )
+    );
+  }, []);
+
+  // ============================
+  // CONNECT WALLET
+  // ============================
   const connectWallet = async () => {
     if (!window.ethereum) {
-      alert('Please install MetaMask!');
+      alert("Please install MetaMask");
       return;
     }
 
@@ -67,74 +148,77 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
 
       const browserProvider = new ethers.BrowserProvider(window.ethereum);
-      await browserProvider.send('eth_requestAccounts', []);
+      await browserProvider.send("eth_requestAccounts", []);
       const signer = await browserProvider.getSigner();
       const address = await signer.getAddress();
-      const network = (await browserProvider.getNetwork()).name;
+
+      const net = await browserProvider.getNetwork();
+      const cid = Number(net.chainId);
 
       setProvider(browserProvider);
       setSigner(signer);
       setAddress(address);
-      setNetwork(network);
+      setChainId(cid);
 
-      // Initialize contracts
-      setLEAGContract(new ethers.Contract(LEAG_ADDRESS, LEAG.abi, signer));
-      setStakingContract(new ethers.Contract(STAKING_ADDRESS, LionEagleStakingManager.abi, signer));
-      setVestingContract(new ethers.Contract(VESTING_ADDRESS, VestingLEAG.abi, signer));
+      // Choose network config based on chainId
+      const chainName: Network =
+        (Object.keys(CHAIN).find((key) => CHAIN[key as Network] === cid) as Network) ||
+        "sepolia";
 
-      // Listen for account or network changes
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', handleChainChanged);
+      setNetwork(chainName);
+
+      if (chainName) {
+        // Bind contracts with signer
+        setLEAGContract(
+          new ethers.Contract(CONTRACTS[chainName].leag, LEAG.abi, signer)
+        );
+        setStakingContract(
+          new ethers.Contract(
+            CONTRACTS[chainName].staking,
+            LionEagleStakingManager.abi,
+            signer
+          )
+        );
+        setVestingContract(
+          new ethers.Contract(CONTRACTS[chainName].vesting, VestingLEAG.abi, signer)
+        );
+      }
     } catch (error) {
-      console.error('Wallet connection failed:', error);
+      console.error("Wallet connection failed:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  // ============================
+  // DISCONNECT
+  // ============================
   const disconnectWallet = () => {
-    setProvider(null);
     setSigner(null);
     setAddress(null);
-    setNetwork(null);
-    setLEAGContract(null);
-    setStakingContract(null);
-    setVestingContract(null);
-    window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
-    window.ethereum?.removeListener('chainChanged', handleChainChanged);
+    setChainId(null);
   };
 
-  const handleAccountsChanged = (accounts: string[]) => {
-    if (accounts.length === 0) disconnectWallet();
-    else setAddress(accounts[0]);
-  };
-
-  const handleChainChanged = async (_chainId: string) => {
-    try {
-      const browserProvider = new ethers.BrowserProvider(window.ethereum);
-      const network = (await browserProvider.getNetwork()).name;
-      setNetwork(network);
-      if (signer) {
-        setLEAGContract(new ethers.Contract(LEAG_ADDRESS, LEAG.abi, signer));
-        setStakingContract(new ethers.Contract(STAKING_ADDRESS, LionEagleStakingManager.abi, signer));
-        setVestingContract(new ethers.Contract(VESTING_ADDRESS, VestingLEAG.abi, signer));
-      }
-    } catch (err) {
-      console.error('Error switching network:', err);
-    }
-  };
-
+  // ============================
+  // HANDLE ACCOUNT CHANGES
+  // ============================
   useEffect(() => {
-    const checkConnection = async () => {
-      if (window.ethereum) {
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await browserProvider.send('eth_accounts', []);
-        if (accounts.length > 0) {
-          await connectWallet();
-        }
-      }
+    if (!window.ethereum) return;
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length === 0) disconnectWallet();
+      else setAddress(accounts[0]);
     };
-    checkConnection();
+
+    const handleChainChanged = () => window.location.reload();
+
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
+    window.ethereum.on("chainChanged", handleChainChanged);
+
+    return () => {
+      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+      window.ethereum.removeListener("chainChanged", handleChainChanged);
+    };
   }, []);
 
   return (
@@ -143,7 +227,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         provider,
         signer,
         address,
-        account: address,
+        chainId,
         network,
         connectWallet,
         disconnectWallet,

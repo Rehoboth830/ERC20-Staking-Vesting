@@ -1,5 +1,6 @@
+// src/lib/providers.ts
 import { ethers } from "ethers";
-import { CONTRACTS } from "./contracts";
+import { CONTRACTS, NETWORKS } from "./contracts";
 
 let provider: ethers.BrowserProvider;
 let signer: ethers.Signer;
@@ -44,8 +45,18 @@ export const getContract = (
   useSigner: boolean = false
 ) => {
   const contractData = CONTRACTS[contractKey];
+  if (!contractData) throw new Error(`Contract key "${contractKey}" not found in CONTRACTS.`);
   if (!provider) throw new Error("Provider not initialized.");
 
   const contractProvider = useSigner ? getSigner() : provider;
   return new ethers.Contract(contractData.address, contractData.abi, contractProvider);
+};
+
+/**
+ * Get network config by chain ID
+ */
+export const getNetworkConfig = (chainId: number) => {
+  if (chainId === NETWORKS.LOCAL.chainId) return NETWORKS.LOCAL;
+  if (chainId === NETWORKS.SEPOLIA.chainId) return NETWORKS.SEPOLIA;
+  throw new Error(`Unsupported network with chainId: ${chainId}`);
 };

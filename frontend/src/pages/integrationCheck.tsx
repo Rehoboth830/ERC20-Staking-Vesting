@@ -6,7 +6,7 @@ import Loader from "../components/Loader";
 import { motion } from "framer-motion";
 
 export default function IntegrationCheck() {
-  const { connectWallet, disconnectWallet, address, isConnected } = useWallet();
+  const { connectWallet, disconnectWallet, address, isConnected, chainId, error } = useWallet();
   const { LEAG, LionEagleStakingManager, VestingLEAG } = useContracts();
 
   const [status, setStatus] = useState({
@@ -83,6 +83,12 @@ export default function IntegrationCheck() {
         {statusBox("Staking Manager Loaded", status.Staking)}
         {statusBox("Vesting Contract Loaded", status.Vesting)}
       </div>
+
+      <p className="mt-4 text-center text-sm text-amber-300">
+        Network: {chainId ? chainId === 11155111 ? "Sepolia" : chainId === 1337 ? "Local" : "Unknown" : "Not Connected"}
+      </p>
+
+      {error && <p className="mt-2 text-center text-sm text-red-500">{error}</p>}
 
       <div className="mt-8 flex gap-4 flex-wrap justify-center">
         {!isConnected

@@ -16,9 +16,9 @@ const NETWORK_ADDRESSES = {
     VESTING: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
   },
   SEPOLIA: {
-    LEAG: "0xYourSepoliaLEAGAddress",
-    STAKING: "0xYourSepoliaStakingAddress",
-    VESTING: "0xYourSepoliaVestingAddress",
+    LEAG: "0xdd93F3362127D82B4BbA32eEf71973850c68b583",
+    STAKING: "0x7b5a00E7C129120ec55Fe322FD144648724B350f",
+    VESTING: "0xC9F4384a31Af4Be60e3BF7F99D555bBD848eF45B",
   },
 };
 
@@ -27,7 +27,11 @@ const NETWORK_ADDRESSES = {
  * 1. First try environment variable
  * 2. Fallback to selected network
  */
-const getContractAddress = (envVar: string, network: "LOCAL" | "SEPOLIA", contract: "LEAG" | "STAKING" | "VESTING"): string => {
+const getContractAddress = (
+  envVar: string,
+  network: "LOCAL" | "SEPOLIA",
+  contract: "LEAG" | "STAKING" | "VESTING"
+): string => {
   const envAddress = process.env[envVar];
   if (envAddress && envAddress !== "") return envAddress;
   return NETWORK_ADDRESSES[network][contract];
@@ -43,13 +47,17 @@ interface UseContractsReturn {
 }
 
 export const useContracts = (): UseContractsReturn => {
-  const { address, isConnected } = useWallet() as { address: string; isConnected: boolean };
+  const { address, isConnected } = useWallet() as {
+    address: string;
+    isConnected: boolean;
+  };
   const [provider, setProvider] = useState<BrowserProvider | null>(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Choose network (from env or default to LOCAL)
-  const NETWORK: "LOCAL" | "SEPOLIA" = process.env.NEXT_PUBLIC_NETWORK === "SEPOLIA" ? "SEPOLIA" : "LOCAL";
+  const NETWORK: "LOCAL" | "SEPOLIA" =
+    process.env.NEXT_PUBLIC_NETWORK === "SEPOLIA" ? "SEPOLIA" : "LOCAL";
 
   // Reset contracts on disconnect
   useEffect(() => {
@@ -71,7 +79,9 @@ export const useContracts = (): UseContractsReturn => {
         const web3Provider = new BrowserProvider((window as any).ethereum);
         setProvider(web3Provider);
 
-        const signerInstance = isConnected ? await web3Provider.getSigner() : null;
+        const signerInstance = isConnected
+          ? await web3Provider.getSigner()
+          : null;
         setSigner(signerInstance);
       } catch (err: any) {
         console.error("❌ Provider/Signer initialization failed:", err);
@@ -86,21 +96,33 @@ export const useContracts = (): UseContractsReturn => {
   const LEAG = useMemo(() => {
     if (!provider) return null;
     const signerOrProvider = signer || provider;
-    const LEAG_ADDRESS = getContractAddress("NEXT_PUBLIC_LEAG_ADDRESS", NETWORK, "LEAG");
+    const LEAG_ADDRESS = getContractAddress(
+      "NEXT_PUBLIC_LEAG_ADDRESS",
+      NETWORK,
+      "LEAG"
+    );
     return new Contract(LEAG_ADDRESS, LEAG_ABI.abi, signerOrProvider);
   }, [provider, signer, NETWORK]);
 
   const LionEagleStakingManager = useMemo(() => {
     if (!provider) return null;
     const signerOrProvider = signer || provider;
-    const STAKING_ADDRESS = getContractAddress("NEXT_PUBLIC_STAKING_ADDRESS", NETWORK, "STAKING");
+    const STAKING_ADDRESS = getContractAddress(
+      "NEXT_PUBLIC_STAKING_ADDRESS",
+      NETWORK,
+      "STAKING"
+    );
     return new Contract(STAKING_ADDRESS, Staking_ABI.abi, signerOrProvider);
   }, [provider, signer, NETWORK]);
 
   const VestingLEAG = useMemo(() => {
     if (!provider) return null;
     const signerOrProvider = signer || provider;
-    const VESTING_ADDRESS = getContractAddress("NEXT_PUBLIC_VESTING_ADDRESS", NETWORK, "VESTING");
+    const VESTING_ADDRESS = getContractAddress(
+      "NEXT_PUBLIC_VESTING_ADDRESS",
+      NETWORK,
+      "VESTING"
+    );
     return new Contract(VESTING_ADDRESS, Vesting_ABI.abi, signerOrProvider);
   }, [provider, signer, NETWORK]);
 

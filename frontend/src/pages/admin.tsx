@@ -8,6 +8,7 @@ import { WalletContext } from "../contexts/WalletContext";
 import { useContracts } from "../hooks/useContracts";
 import { formatEther, parseEther } from "viem";
 import { motion } from "framer-motion";
+import { CONTRACTS } from "../utils/constants"; // <- centralized contract addresses
 
 const AdminPage = () => {
   const { address, connectWallet } = useContext(WalletContext);
@@ -202,7 +203,8 @@ const AdminPage = () => {
               {/* Pool & Token Info */}
               <AdminPanel title={`Total Pools: ${totalPools}`}>
                 <p className="text-amber-300">
-                  Reward Token: {process.env.NEXT_PUBLIC_LEAG_ADDRESS || "Loading..."}
+Reward Token: {CONTRACTS.LEAG_TOKEN || "Loading..."}
+
                 </p>
               </AdminPanel>
             </>

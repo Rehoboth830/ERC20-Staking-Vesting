@@ -1,9 +1,10 @@
 import React, { useContext } from "react";
 import { WalletContext } from "../contexts/WalletContext";
+import { NETWORKS } from "../utils/constants";
 import { motion } from "framer-motion";
 
 const WalletConnect: React.FC = () => {
-  const { address, connectWallet, disconnectWallet } = useContext(WalletContext);
+  const { address, connectWallet, disconnectWallet, chainId } = useContext(WalletContext);
 
   const buttonVariants = {
     hover: { scale: 1.05, boxShadow: "0 0 12px #FFD700, 0 0 24px #FFBF00" },
@@ -18,6 +19,11 @@ const WalletConnect: React.FC = () => {
     },
   };
 
+  // Determine network name
+  const networkName = chainId
+    ? Object.values(NETWORKS).find((n) => n.chainId === chainId)?.name || "Unknown"
+    : "";
+
   return (
     <div className="flex items-center gap-2">
       {address ? (
@@ -30,6 +36,12 @@ const WalletConnect: React.FC = () => {
           >
             {address.slice(0, 6)}...{address.slice(-4)}
           </motion.span>
+
+          {networkName && (
+            <span className="bg-yellow-600 text-black px-2 py-1 rounded font-mono text-xs md:text-sm">
+              {networkName}
+            </span>
+          )}
 
           <motion.button
             onClick={disconnectWallet}

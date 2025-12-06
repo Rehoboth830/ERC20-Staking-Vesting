@@ -1,27 +1,37 @@
 // ----------------------------
-// NETWORK CONFIG
+// NETWORK CONFIG (ENV-DRIVEN)
 // ----------------------------
 export const NETWORKS = {
   SEPOLIA: {
-    chainId: 11155111,
+    chainId: Number(process.env.NEXT_PUBLIC_SEPOLIA_CHAIN_ID),
     name: "Sepolia Testnet",
-    rpcUrl: "https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+    rpcUrl: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL!,
   },
   LOCAL: {
-    chainId: 31337,
+    chainId: Number(process.env.NEXT_PUBLIC_LOCAL_CHAIN_ID),
     name: "Hardhat Local",
-    rpcUrl: "http://127.0.0.1:8545",
+    rpcUrl: process.env.NEXT_PUBLIC_LOCAL_RPC_URL!,
   },
 };
 
 // ----------------------------
-// CONTRACT ADDRESSES
-// Replace with actual deployed addresses
+// CONTRACTS (ENV-DRIVEN)
 // ----------------------------
 export const CONTRACTS = {
-  LEAG_TOKEN: "0xYourLEAGTokenAddressHere",
-  VESTING: "0xYourVestingLEAGAddressHere",
-  STAKING_MANAGER: "0xYourLionEagleStakingManagerAddressHere",
+  LEAG_TOKEN:
+    process.env.NEXT_PUBLIC_DEFAULT_NETWORK === "sepolia"
+      ? process.env.NEXT_PUBLIC_SEPOLIA_LEAG_ADDRESS!
+      : process.env.NEXT_PUBLIC_LOCAL_LEAG_ADDRESS!,
+
+  VESTING:
+    process.env.NEXT_PUBLIC_DEFAULT_NETWORK === "sepolia"
+      ? process.env.NEXT_PUBLIC_SEPOLIA_VESTING_ADDRESS!
+      : process.env.NEXT_PUBLIC_LOCAL_VESTING_ADDRESS!,
+
+  STAKING_MANAGER:
+    process.env.NEXT_PUBLIC_DEFAULT_NETWORK === "sepolia"
+      ? process.env.NEXT_PUBLIC_SEPOLIA_STAKING_ADDRESS!
+      : process.env.NEXT_PUBLIC_LOCAL_STAKING_ADDRESS!,
 };
 
 // ----------------------------
@@ -33,19 +43,20 @@ export const TOKEN = {
 };
 
 // ----------------------------
-// UI / APP CONSTANTS
+// UI CONSTANTS
 // ----------------------------
-export const APP_NAME = "Lion-Eagle Dashboard";
+export const APP_NAME = process.env.NEXT_PUBLIC_PROJECT_NAME ?? "Lion-Eagle Dashboard";
+
 export const APP_THEME = {
-  primary: "#000000",    // Black
-  secondary: "#FFD700",  // Gold
-  accent: "#FFBF00",     // Amber glow
+  primary: "#000000",
+  secondary: "#FFD700",
+  accent: "#FFBF00",
 };
 
-export const TOAST_DURATION = 4000; // ms
+export const TOAST_DURATION = 4000;
 
 // ----------------------------
-// DEFAULT VALUES
+// DEFAULTS
 // ----------------------------
 export const DEFAULT_USER_ADDRESS = "0x0000000000000000000000000000000000000000";
 export const DEFAULT_TOKEN_AMOUNT = "0";

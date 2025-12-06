@@ -15,26 +15,42 @@ export const useProviders = (): ProviderState => {
   const [networkName, setNetworkName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize provider
+  // ============================
+  // Initialize Provider
+  // ============================
   useEffect(() => {
-    if (typeof window !== "undefined" && window.ethereum) {
+    if (typeof window !== "undefined" && (window as any).ethereum) {
       try {
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
+        const browserProvider = new ethers.BrowserProvider(
+          (window as any).ethereum
+        );
         setProvider(browserProvider);
 
+        // Fetch initial network
         browserProvider.getNetwork().then((network) => {
-          setChainId(Number(network.chainId));
-          setNetworkName(network.name);
+          const cid = Number(network.chainId);
+          setChainId(cid);
+
+          const nameMap: Record<number, string> = {
+            1: "Ethereum Mainnet",
+            11155111: "Sepolia",
+            5: "Goerli (Deprecated)",
+          };
+
+          setNetworkName(nameMap[cid] || network.name || "Unknown Network");
         });
 
-        window.ethereum.on("chainChanged", (chainIdHex: string) => {
+        // Listen for network changes
+        (window as any).ethereum.on("chainChanged", (chainIdHex: string) => {
           const newChainId = parseInt(chainIdHex, 16);
           setChainId(newChainId);
-          const nameMap: { [key: number]: string } = {
+
+          const nameMap: Record<number, string> = {
             1: "Ethereum Mainnet",
-            5: "Goerli",
             11155111: "Sepolia",
+            5: "Goerli (Deprecated)",
           };
+
           setNetworkName(nameMap[newChainId] || "Unknown Network");
         });
       } catch (err: any) {
@@ -46,14 +62,17 @@ export const useProviders = (): ProviderState => {
     }
   }, []);
 
-  // Switch network function
+  // ============================
+  // Switch Network
+  // ============================
   const switchNetwork = async (targetChainId: number) => {
     if (!provider) {
       setError("Provider not initialized.");
       return;
     }
+
     try {
-      await window.ethereum.request({
+      await (window as any).ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: "0x" + targetChainId.toString(16) }],
       });
@@ -66,5 +85,11 @@ export const useProviders = (): ProviderState => {
     }
   };
 
-  return { provider, chainId, networkName, switchNetwork, error };
+  return {
+    provider,
+    chainId,
+    networkName,
+    switchNetwork,
+    error,
+  };
 };

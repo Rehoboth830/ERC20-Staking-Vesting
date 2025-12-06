@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 import Notification from "../components/Notification";
 import { WalletContext } from "../contexts/WalletContext";
 import { useContracts } from "../hooks/useContracts";
-import { formatEther } from "viem";
+import { formatEther } from "ethers"; // <-- fixed for Ethers v6
 
 interface HistoryItem {
   type: string;
@@ -55,7 +55,7 @@ const HistoryPage = () => {
         events.push({
           type: typeLabel,
           poolId: e.args.pid ? Number(e.args.pid) : undefined,
-          amount: formatEther(e.args.amount),
+          amount: formatEther(e.args.amount), // ✅ Ethers BigNumber compatible
           timestamp: new Date(block.timestamp * 1000).toLocaleString(),
           txHash: e.transactionHash,
         });
