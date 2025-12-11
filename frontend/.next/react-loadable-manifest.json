@@ -1,26 +1,14 @@
 {
   "..\\..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
-    "id": 4750,
+    "id": "..\\..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app",
     "files": [
-      "static/chunks/750.caaf5a9ddd46b267.js"
+      "static/chunks/fallback/_pages-dir-browser_node_modules_next_dist_pages__app_js.js"
     ]
   },
   "..\\..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
-    "id": 5131,
+    "id": "..\\..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error",
     "files": [
-      "static/chunks/131.2b0db2ec21a47401.js"
+      "static/chunks/fallback/_pages-dir-browser_node_modules_next_dist_pages__error_js.js"
     ]
-  },
-  "..\\..\\node_modules\\viem\\_esm\\actions\\public\\call.js -> ../../utils/ccip.js": {
-    "id": null,
-    "files": []
-  },
-  "..\\..\\node_modules\\viem\\_esm\\utils\\rpc\\webSocket.js -> isows": {
-    "id": null,
-    "files": []
-  },
-  "..\\..\\node_modules\\viem\\_esm\\utils\\signature\\recoverPublicKey.js -> @noble/curves/secp256k1": {
-    "id": null,
-    "files": []
   }
 }

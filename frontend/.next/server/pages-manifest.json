@@ -1,13 +1,6 @@
 {
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
-  "/404": "pages/404.html",
-  "/admin": "pages/admin.html",
-  "/history": "pages/history.html",
-  "/": "pages/index.html",
-  "/integrationCheck": "pages/integrationCheck.html",
-  "/token": "pages/token.html",
-  "/staking": "pages/staking.html",
-  "/vesting": "pages/vesting.html",
-  "/_document": "pages/_document.js"
+  "/_document": "pages/_document.js",
+  "/": "pages/index.js"
 }

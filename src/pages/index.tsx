@@ -36,6 +36,9 @@ const format = (value: any) => {
   }
 };
 
+// src/pages/index.tsx
+// ... keep all imports and interfaces as-is
+
 const IndexPage = () => {
   const { address, connectWallet, signer } = useContext(WalletContext) as any;
   const { LEAG, LionEagleStakingManager, VestingLEAG } = useContracts();
@@ -52,131 +55,155 @@ const IndexPage = () => {
   const [pageLoading, setPageLoading] = useState<boolean>(true);
   const [notification, setNotification] = useState<{ type?: "error" | "success" | "info"; message: string } | null>(null);
 
-  // Modal for quick stake/withdraw
+  // Modal
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [modalPool, setModalPool] = useState<Pool | null>(null);
   const [modalAction, setModalAction] = useState<"stake" | "withdraw" | null>(null);
   const [modalAmount, setModalAmount] = useState<string>("");
 
-  // --------------------------
-  // Fetch Pools, Token Balance, Vesting Summary (optimized)
-  // --------------------------
-  useEffect(() => {
-    if (!address || !LEAG || !LionEagleStakingManager) {
-      setPageLoading(false);
-      return;
-    }
+ useEffect(() => {
+  if (!address || !LEAG || !LionEagleStakingManager) {
+    setPageLoading(false);
+    return;
+  }
 
-    const fetchAll = async () => {
-      setPageLoading(true);
-      setNotification(null);
+  const fetchAll = async () => {
+    setPageLoading(true);
+    setNotification(null);
 
-      try {
-        // token balance
-        const balPromise = LEAG.balanceOf(address);
+    try {
+      // --- Ensure correct provider ---
+      const provider = signer?.provider ?? new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL);
 
-        // pool count
-        const poolCountBN = await LionEagleStakingManager.poolLength();
-        const poolCount = Number(poolCountBN || 0);
+      // --- Create LEAG contract ---
+      const leagContract = new ethers.Contract(
+        LEAG.target ?? LEAG.address,
+        [
+          "function approve(address spender, uint256 amount) returns (bool)",
+          "function balanceOf(address account) view returns (uint256)",
+          "function transfer(address to, uint256 amount) returns (bool)"
+        ],
+        signer ?? provider
+      );
 
-        // prepare pool fetch promises
-        const poolPromises: Promise<Pool>[] = Array.from({ length: poolCount }).map(async (_, i) => {
-          const poolRaw: any = await LionEagleStakingManager.poolInfo(i);
-          let totalStaked = "0";
-          let userStaked = "0";
+      // --- Create StakingManager contract safely ---
+      const stakingManager = new ethers.Contract(
+        LionEagleStakingManager.target ?? LionEagleStakingManager.address,
+        [
+          "function poolLength() view returns (uint256)",
+          "function poolInfo(uint256) view returns (address lpToken, uint256 allocPoint, uint256 accRewardPerShare)",
+          "function userInfo(uint256,address) view returns (uint256 amount, uint256 rewardDebt)"
+        ],
+        signer ?? provider
+      );
 
-          // resolve LP token balances in parallel when possible
-          try {
-            const lpAddr = poolRaw.lpToken;
-            const stakingAddr =
-              typeof (LionEagleStakingManager as any).getAddress === "function"
-                ? await (LionEagleStakingManager as any).getAddress()
-                : LionEagleStakingManager.address ?? LionEagleStakingManager.target;
-            if (lpAddr && lpAddr !== ethers.ZeroAddress) {
-              const lpContract = new ethers.Contract(lpAddr, ["function balanceOf(address) view returns (uint256)"], signer?.provider || new ethers.JsonRpcProvider());
-              const [total, userInfo] = await Promise.all([
-                lpContract.balanceOf(stakingAddr),
-                address ? LionEagleStakingManager.userInfo(i, address).catch(() => null) : null,
-              ]);
-              totalStaked = format(total);
-              if (userInfo) {
-                userStaked = format(userInfo.amount ?? 0n);
-              }
-            } else {
-              // fallback to reading userInfo only
-              const userInfo = address ? await LionEagleStakingManager.userInfo(i, address).catch(() => null) : null;
-              if (userInfo) userStaked = format(userInfo.amount ?? 0n);
-            }
-          } catch (err) {
-            // ignore per-pool errors, leave values at "0"
-            userStaked = userStaked ?? "0";
-            totalStaked = totalStaked ?? "0";
+      // --- Create VestingLEAG contract safely ---
+      const vestingContract = VestingLEAG
+        ? new ethers.Contract(
+            VestingLEAG.target ?? VestingLEAG.address,
+            [
+              "function grants(address,uint256) view returns (tuple(uint256 start, uint256 cliff, uint256 duration, uint256 amount, uint256 released))",
+              "function vestedAmount(address,uint256) view returns (uint256)"
+            ],
+            signer ?? provider
+          )
+        : null;
+
+      // --- Fetch pool count safely ---
+      const poolCountBN = await stakingManager.poolLength();
+      const poolCount = Number(poolCountBN ?? 0);
+
+      // --- Fetch all pools ---
+      const poolPromises: Promise<Pool>[] = Array.from({ length: poolCount }).map(async (_, i) => {
+        const poolRaw: any = await stakingManager.poolInfo(i);
+        let totalStaked = "0";
+        let userStaked = "0";
+
+        try {
+          const lpAddr = poolRaw.lpToken;
+          if (lpAddr && lpAddr !== ethers.ZeroAddress) {
+            const lpContract = new ethers.Contract(
+              lpAddr,
+              ["function balanceOf(address) view returns (uint256)"],
+              provider
+            );
+
+            const [total, userInfo] = await Promise.all([
+              lpContract.balanceOf(stakingManager.address),
+              address ? stakingManager.userInfo(i, address).catch(() => null) : null,
+            ]);
+
+            totalStaked = format(total);
+            if (userInfo) userStaked = format(userInfo.amount ?? 0n);
+          } else {
+            const userInfo = address ? await stakingManager.userInfo(i, address).catch(() => null) : null;
+            if (userInfo) userStaked = format(userInfo.amount ?? 0n);
           }
-
-          const apr = Number(poolRaw.allocPoint ?? 0);
-          return {
-            pid: i,
-            lpToken: poolRaw.lpToken,
-            allocPoint: poolRaw.allocPoint,
-            accRewardPerShare: poolRaw.accRewardPerShare,
-            totalStaked,
-            userStaked,
-            apr,
-            maxStaked: "1000",
-          } as Pool;
-        });
-
-        // run token balance & all pools in parallel
-        const [balanceRaw, poolsResolved] = await Promise.all([balPromise, Promise.all(poolPromises)]);
-        setTokenBalance(format(balanceRaw));
-
-        // calculate total staked across pools
-        const totalStakedBN = poolsResolved.reduce((acc, p) => acc + Number(p.totalStaked ?? "0"), 0);
-        setTotalStakedAll(String(totalStakedBN.toFixed(6)));
-
-        setPools(poolsResolved);
-
-        // Vesting summary (fetch grants in sequence but aggregated; limit to MAX_SCAN)
-        if (VestingLEAG) {
-          const MAX_SCAN = 200;
-          let totalGrants = 0;
-          let totalClaimable = 0n;
-          let totalReleased = 0n;
-
-          for (let i = 0; i < MAX_SCAN; i++) {
-            try {
-              const grant = await (VestingLEAG as any).grants(address, i);
-              if (!grant) break;
-              totalGrants++;
-              const vestedRaw = await (VestingLEAG as any).vestedAmount(address, i);
-              const releasedRaw = BigInt(grant.released ?? 0n);
-              totalReleased += releasedRaw;
-              // vestedRaw may be BigInt or BN-like; coerce to BigInt
-              const vestedBI = BigInt(vestedRaw ?? 0n);
-              const claimableForGrant = vestedBI > releasedRaw ? vestedBI - releasedRaw : 0n;
-              totalClaimable += claimableForGrant;
-            } catch {
-              break;
-            }
-          }
-
-          setVestingSummary({
-            totalGrants,
-            totalClaimable: ethers.formatUnits(totalClaimable, 18),
-            totalReleased: ethers.formatUnits(totalReleased, 18),
-          });
+        } catch {
+          totalStaked = totalStaked ?? "0";
+          userStaked = userStaked ?? "0";
         }
-      } catch (err: any) {
-        console.error("Dashboard fetch error:", err);
-        setNotification({ type: "error", message: "Failed to fetch dashboard data." });
-      } finally {
-        setPageLoading(false);
-      }
-    };
 
-    fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, LEAG, LionEagleStakingManager, VestingLEAG, signer]);
+        return {
+          pid: i,
+          lpToken: poolRaw.lpToken,
+          allocPoint: poolRaw.allocPoint,
+          accRewardPerShare: poolRaw.accRewardPerShare,
+          totalStaked,
+          userStaked,
+          apr: Number(poolRaw.allocPoint ?? 0),
+          maxStaked: "1000",
+        } as Pool;
+      });
+
+      const poolsResolved = await Promise.all(poolPromises);
+      setPools(poolsResolved);
+
+      const totalStakedBN = poolsResolved.reduce((acc, p) => acc + Number(p.totalStaked ?? "0"), 0);
+      setTotalStakedAll(totalStakedBN.toFixed(6));
+
+      // --- Vesting summary ---
+      if (vestingContract) {
+        const MAX_SCAN = 200;
+        let totalGrants = 0;
+        let totalClaimable = 0n;
+        let totalReleased = 0n;
+
+        for (let i = 0; i < MAX_SCAN; i++) {
+          try {
+            const grant = await vestingContract.grants(address, i);
+            if (!grant) break;
+
+            totalGrants++;
+            const vestedRaw = await vestingContract.vestedAmount(address, i);
+            const releasedRaw = BigInt(grant.released ?? 0n);
+            totalReleased += releasedRaw;
+            const vestedBI = BigInt(vestedRaw ?? 0n);
+            totalClaimable += vestedBI > releasedRaw ? vestedBI - releasedRaw : 0n;
+          } catch {
+            break;
+          }
+        }
+
+        setVestingSummary({
+          totalGrants,
+          totalClaimable: ethers.formatUnits(totalClaimable, 18),
+          totalReleased: ethers.formatUnits(totalReleased, 18),
+        });
+      }
+    } catch (err: any) {
+      console.error("Dashboard fetch error:", err);
+      setNotification({ type: "error", message: "Failed to fetch dashboard data." });
+    } finally {
+      setPageLoading(false);
+    }
+  };
+
+  fetchAll();
+}, [address, LEAG, LionEagleStakingManager, VestingLEAG, signer]);
+
+  // ... keep all modal handlers, claimAll, helpers, and JSX unchanged
+
 
   // --------------------------
   // Modal handlers

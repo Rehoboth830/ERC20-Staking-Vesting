@@ -48,17 +48,18 @@ const CONTRACTS: Record<
     staking: process.env.NEXT_PUBLIC_LOCAL_STAKING_ADDRESS || "",
     vesting: process.env.NEXT_PUBLIC_LOCAL_VESTING_ADDRESS || "",
   },
-  sepolia: {
-    leag:
-      process.env.NEXT_PUBLIC_SEPOLIA_LEAG_ADDRESS ||
-      "0xdd93F3362127D82B4BbA32eEf71973850c68b583",
-    staking:
-      process.env.NEXT_PUBLIC_SEPOLIA_STAKING_ADDRESS ||
-      "0x7b5a00E7C129120ec55Fe322FD144648724B350f",
-    vesting:
-      process.env.NEXT_PUBLIC_SEPOLIA_VESTING_ADDRESS ||
-      "0xC9F4384a31Af4Be60e3BF7F99D555bBD848eF45B",
-  },
+ sepolia: {
+  leag:
+    process.env.NEXT_PUBLIC_SEPOLIA_LEAG_ADDRESS ||
+    "0x81bC25AD516a97f6FC70609f97117858781822D0",
+  staking:
+    process.env.NEXT_PUBLIC_SEPOLIA_STAKING_ADDRESS ||
+    "0xAa2C27a993a2221E5f0F92547bc7FF0b94995238",
+  vesting:
+    process.env.NEXT_PUBLIC_SEPOLIA_VESTING_ADDRESS ||
+    "0x8216B9568d05ccEA31F41d4a0FD87e57e6853450",
+},
+
 };
 
 // ABIs

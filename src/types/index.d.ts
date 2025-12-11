@@ -1,7 +1,7 @@
 // src/types/index.d.ts
 
 import { Address } from "viem";
-import { BigNumber } from "ethers";
+import { BigNumberish } from "ethers"; // ✅ ethers v6 compatible
 
 // -----------------------------
 // Token & Contract Interfaces
@@ -11,35 +11,35 @@ export interface ERC20 {
   name: string;
   symbol: string;
   decimals: number;
-  balanceOf: (account: Address) => Promise<BigNumber>;
-  approve: (spender: Address, amount: BigNumber) => Promise<void>;
-  allowance: (owner: Address, spender: Address) => Promise<BigNumber>;
-  transfer: (to: Address, amount: BigNumber) => Promise<void>;
+  balanceOf: (account: Address) => Promise<bigint>; // replaced BigNumber
+  approve: (spender: Address, amount: BigNumberish) => Promise<void>; // BigNumberish works for inputs
+  allowance: (owner: Address, spender: Address) => Promise<bigint>;
+  transfer: (to: Address, amount: BigNumberish) => Promise<void>;
 }
 
 export interface StakingPool {
   pid: number;
   lpToken: ERC20;
   allocPoint: number;
-  accRewardPerShare: BigNumber;
+  accRewardPerShare: bigint; // replaced BigNumber
   lastRewardTime: number;
   exists: boolean;
 }
 
 export interface UserInfo {
-  amount: BigNumber;
-  rewardDebt: BigNumber;
+  amount: bigint;
+  rewardDebt: bigint;
 }
 
 // -----------------------------
 // Vesting Interfaces
 // -----------------------------
 export interface Grant {
-  amount: BigNumber;
+  amount: bigint;
   start: number;
   cliff: number;
   duration: number;
-  released: BigNumber;
+  released: bigint;
 }
 
 export interface VestingInfo {
