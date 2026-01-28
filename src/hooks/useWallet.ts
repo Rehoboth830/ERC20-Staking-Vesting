@@ -1,6 +1,7 @@
 // frontend/src/hooks/useWallet.ts
 import { useState, useEffect, useContext } from "react";
 import { WalletContext } from "../contexts/WalletContext";
+import { ethers } from "ethers";
 import type { BrowserProvider } from "ethers";
 
 interface UseWalletReturn {
@@ -36,22 +37,55 @@ export const useWallet = (): UseWalletReturn => {
 
     const updateChainFromProvider = async () => {
       try {
+        let net: ethers.Network | null = null;
+
+        // Primary provider: Wallet
         const provider = wallet?.provider as BrowserProvider | null | undefined;
         if (provider) {
-          const net = await provider.getNetwork();
-          if (!mounted) return;
-          const cidRaw = (net as any).chainId;
-          const cid = typeof cidRaw === "bigint" ? Number(cidRaw) : cidRaw;
-          setChainId(cid);
-          if (!SUPPORTED_NETWORKS[cid]) {
-            setError("Unsupported network. Please switch to Sepolia.");
+          try {
+            net = await provider.getNetwork();
+          } catch (walletErr) {
+            console.warn("Wallet provider failed, falling back to RPC:", walletErr);
           }
-        } else {
+        }
+
+        // Fallback provider: Sepolia RPC
+        if (!net) {
+          try {
+            const fallbackProvider = new ethers.JsonRpcProvider(
+              process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL
+            );
+            net = await fallbackProvider.getNetwork();
+          } catch (rpcErr) {
+            console.error("Fallback RPC failed:", rpcErr);
+            setError("Failed to connect to Sepolia RPC.");
+            setChainId(null);
+            return;
+          }
+        }
+
+        if (!mounted) return;
+
+        const cidRaw: number | bigint = (net as any).chainId ?? null;
+        const cid = typeof cidRaw === "bigint" ? Number(cidRaw) : cidRaw;
+
+        if (!cid) {
+          setError("Failed to detect network. Chain ID undefined.");
           setChainId(null);
+          return;
+        }
+
+        setChainId(cid);
+
+        if (!SUPPORTED_NETWORKS[cid]) {
+          setError("Unsupported network. Please switch to Sepolia.");
+        } else {
+          setError(null);
         }
       } catch (err: any) {
         console.error("useWallet: failed to read network from provider:", err);
-        setError((err && err.message) || String(err));
+        setError((err && err.message) || "Unknown error");
+        setChainId(null);
       }
     };
 
@@ -60,23 +94,26 @@ export const useWallet = (): UseWalletReturn => {
     const handleChainChanged = (hexChainId: string) => {
       try {
         const parsed = parseInt(hexChainId, 16);
-        const chainNum = Number.isFinite(parsed) ? parsed : null;
-        setChainId(chainNum);
-        if (chainNum && !SUPPORTED_NETWORKS[chainNum]) {
-          setError("Unsupported network. Please switch to Sepolia.");
+        if (!Number.isFinite(parsed)) {
+          setChainId(null);
+          setError("Failed to parse chain ID.");
+          return;
         }
-      } catch (e) {
+        setChainId(parsed);
+        setError(SUPPORTED_NETWORKS[parsed] ? null : "Unsupported network. Please switch to Sepolia.");
+      } catch {
         setChainId(null);
+        setError("Error handling chain change.");
       }
     };
 
-    if (typeof window !== "undefined" && (window as any).ethereum && (window as any).ethereum.on) {
+    if (typeof window !== "undefined" && (window as any).ethereum?.on) {
       (window as any).ethereum.on("chainChanged", handleChainChanged);
     }
 
     return () => {
       mounted = false;
-      if (typeof window !== "undefined" && (window as any).ethereum && (window as any).ethereum.removeListener) {
+      if (typeof window !== "undefined" && (window as any).ethereum?.removeListener) {
         (window as any).ethereum.removeListener("chainChanged", handleChainChanged);
       }
     };
@@ -129,11 +166,12 @@ export const useWallet = (): UseWalletReturn => {
         params: [{ chainId: hex }],
       });
       setChainId(targetChainId);
+      setError(null);
     } catch (err: any) {
-      if (err && err.code === 4902) {
+      if (err?.code === 4902) {
         setError("Target chain not found in wallet. Please add the network to your wallet.");
       } else {
-        setError((err && err.message) || String(err));
+        setError(err?.message || String(err));
       }
       console.error("useWallet: switchNetwork error", err);
     }

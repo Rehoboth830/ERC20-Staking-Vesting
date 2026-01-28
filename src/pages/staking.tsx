@@ -1,7 +1,7 @@
 // src/pages/StakingPage.tsx
 import { useState, useEffect } from "react";
 import Head from "next/head";
-import Header from "../components/Header";
+import NavBar from "../components/NavBar";
 import StakingPoolCard from "../components/StakingPoolCard";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
@@ -303,7 +303,7 @@ const StakingPage: React.FC = () => {
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-black via-amber-900 to-black text-amber-400">
-        <Header />
+        <NavBar />
         {loading && <Loader />}
         <main className="max-w-6xl mx-auto p-6">
           <h1 className="text-3xl font-bold mb-6">Staking Pools</h1>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Header from "../components/Header";
+import NavBar from "../components/NavBar";
 import TokenCard from "../components/TokenCard";
 import Loader from "../components/Loader";
 import Notification from "../components/Notification";
@@ -83,7 +83,7 @@ await tx.wait();
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-black via-amber-900 to-black text-amber-400 font-lion">
-        <Header />
+        <NavBar />
 
         {loading && <Loader />}
         {notification && (

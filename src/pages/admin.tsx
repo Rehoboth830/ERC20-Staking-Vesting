@@ -1,7 +1,7 @@
 // src/pages/admin.tsx
 import { useState, useEffect, useContext } from "react";
 import Head from "next/head";
-import Header from "../components/Header";
+import NavBar from "../components/NavBar";
 import Loader from "../components/Loader";
 import Notification from "../components/Notification";
 import { WalletContext } from "../contexts/WalletContext";
@@ -121,7 +121,7 @@ const AdminPage = () => {
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-black via-amber-900 to-black text-amber-400">
-        <Header />
+        <NavBar />
 
         {loading && <Loader />}
 

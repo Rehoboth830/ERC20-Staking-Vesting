@@ -2,7 +2,7 @@
 import { useEffect, useState, useContext } from "react";
 import Head from "next/head";
 import { WalletContext } from "../contexts/WalletContext";
-import Header from "../components/Header";
+import NavBar from "../components/NavBar";
 import StakingPoolCard from "../components/StakingPoolCard";
 import TokenCard from "../components/TokenCard";
 import Loader from "../components/Loader";
@@ -40,7 +40,7 @@ const format = (value: any) => {
 // ... keep all imports and interfaces as-is
 
 const IndexPage = () => {
-  const { address, connectWallet, signer } = useContext(WalletContext) as any;
+  const { address, connectWallet, signer, chainId } = useContext(WalletContext) as any;
   const { LEAG, LionEagleStakingManager, VestingLEAG } = useContracts();
 
   const [pools, setPools] = useState<Pool[]>([]);
@@ -61,7 +61,7 @@ const IndexPage = () => {
   const [modalAction, setModalAction] = useState<"stake" | "withdraw" | null>(null);
   const [modalAmount, setModalAmount] = useState<string>("");
 
- useEffect(() => {
+useEffect(() => {
   if (!address || !LEAG || !LionEagleStakingManager) {
     setPageLoading(false);
     return;
@@ -72,23 +72,37 @@ const IndexPage = () => {
     setNotification(null);
 
     try {
-      // --- Ensure correct provider ---
+      // ✅ Use chainId from WalletContext instead of fetching manually
+      const sepoliaChainId = Number(process.env.NEXT_PUBLIC_SEPOLIA_CHAIN_ID);
+
+      if (chainId !== sepoliaChainId) {
+        setNotification({
+          type: "error",
+          message: `Please switch your network to Sepolia (chainId: ${sepoliaChainId}).`,
+        });
+        setPageLoading(false);
+        return;
+      }
+
+      // --- Setup provider (signer or fallback) ---
       const provider = signer?.provider ?? new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL);
 
-      // --- Create LEAG contract ---
-      const leagContract = new ethers.Contract(
-        LEAG.target ?? LEAG.address,
-        [
-          "function approve(address spender, uint256 amount) returns (bool)",
-          "function balanceOf(address account) view returns (uint256)",
-          "function transfer(address to, uint256 amount) returns (bool)"
-        ],
-        signer ?? provider
-      );
+      // --- Confirm contract addresses ---
+      const stakingAddr = LionEagleStakingManager.target ?? LionEagleStakingManager.address;
+      const leagAddr = LEAG.target ?? LEAG.address;
 
-      // --- Create StakingManager contract safely ---
+      if (!stakingAddr || !leagAddr) {
+        setNotification({ type: "error", message: "StakingManager or LEAG contract address missing!" });
+        setPageLoading(false);
+        return;
+      }
+
+      // ... rest of your pool & vesting fetching logic unchanged ...
+      
+
+      // --- Initialize contracts ---
       const stakingManager = new ethers.Contract(
-        LionEagleStakingManager.target ?? LionEagleStakingManager.address,
+        stakingAddr,
         [
           "function poolLength() view returns (uint256)",
           "function poolInfo(uint256) view returns (address lpToken, uint256 allocPoint, uint256 accRewardPerShare)",
@@ -97,7 +111,16 @@ const IndexPage = () => {
         signer ?? provider
       );
 
-      // --- Create VestingLEAG contract safely ---
+      const leagContract = new ethers.Contract(
+        leagAddr,
+        [
+          "function approve(address spender, uint256 amount) returns (bool)",
+          "function balanceOf(address account) view returns (uint256)",
+          "function transfer(address to, uint256 amount) returns (bool)"
+        ],
+        signer ?? provider
+      );
+
       const vestingContract = VestingLEAG
         ? new ethers.Contract(
             VestingLEAG.target ?? VestingLEAG.address,
@@ -110,50 +133,65 @@ const IndexPage = () => {
         : null;
 
       // --- Fetch pool count safely ---
-      const poolCountBN = await stakingManager.poolLength();
-      const poolCount = Number(poolCountBN ?? 0);
+      let poolCount = 0;
+      try {
+        const poolCountBN = await stakingManager.poolLength();
+        poolCount = Number(poolCountBN ?? 0);
+      } catch (err) {
+        console.error("Failed to fetch poolLength:", err);
+        setNotification({ type: "error", message: "Failed to fetch staking pool count." });
+        setPageLoading(false);
+        return;
+      }
 
       // --- Fetch all pools ---
       const poolPromises: Promise<Pool>[] = Array.from({ length: poolCount }).map(async (_, i) => {
-        const poolRaw: any = await stakingManager.poolInfo(i);
-        let totalStaked = "0";
-        let userStaked = "0";
-
         try {
-          const lpAddr = poolRaw.lpToken;
-          if (lpAddr && lpAddr !== ethers.ZeroAddress) {
-            const lpContract = new ethers.Contract(
-              lpAddr,
-              ["function balanceOf(address) view returns (uint256)"],
-              provider
-            );
+          const poolRaw: any = await stakingManager.poolInfo(i);
 
-            const [total, userInfo] = await Promise.all([
-              lpContract.balanceOf(stakingManager.address),
-              address ? stakingManager.userInfo(i, address).catch(() => null) : null,
-            ]);
+          let totalStaked = "0";
+          let userStaked = "0";
 
-            totalStaked = format(total);
-            if (userInfo) userStaked = format(userInfo.amount ?? 0n);
+          if (poolRaw.lpToken && poolRaw.lpToken !== ethers.ZeroAddress) {
+            try {
+              const lpContract = new ethers.Contract(poolRaw.lpToken, ["function balanceOf(address) view returns (uint256)"], provider);
+              const [total, userInfo] = await Promise.all([
+                lpContract.balanceOf(stakingAddr),
+                address ? stakingManager.userInfo(i, address).catch(() => null) : null,
+              ]);
+              totalStaked = ethers.formatUnits(total ?? 0n, 18);
+              if (userInfo) userStaked = ethers.formatUnits(userInfo.amount ?? 0n, 18);
+            } catch {
+              totalStaked = "0";
+              userStaked = "0";
+            }
           } else {
             const userInfo = address ? await stakingManager.userInfo(i, address).catch(() => null) : null;
-            if (userInfo) userStaked = format(userInfo.amount ?? 0n);
+            if (userInfo) userStaked = ethers.formatUnits(userInfo.amount ?? 0n, 18);
           }
-        } catch {
-          totalStaked = totalStaked ?? "0";
-          userStaked = userStaked ?? "0";
-        }
 
-        return {
-          pid: i,
-          lpToken: poolRaw.lpToken,
-          allocPoint: poolRaw.allocPoint,
-          accRewardPerShare: poolRaw.accRewardPerShare,
-          totalStaked,
-          userStaked,
-          apr: Number(poolRaw.allocPoint ?? 0),
-          maxStaked: "1000",
-        } as Pool;
+          return {
+            pid: i,
+            lpToken: poolRaw.lpToken,
+            allocPoint: Number(poolRaw.allocPoint ?? 0),
+            accRewardPerShare: Number(poolRaw.accRewardPerShare ?? 0),
+            totalStaked,
+            userStaked,
+            apr: Number(poolRaw.allocPoint ?? 0),
+            maxStaked: "1000",
+          } as Pool;
+        } catch {
+          return {
+            pid: i,
+            lpToken: ethers.ZeroAddress,
+            allocPoint: 0,
+            accRewardPerShare: 0,
+            totalStaked: "0",
+            userStaked: "0",
+            apr: 0,
+            maxStaked: "1000",
+          } as Pool;
+        }
       });
 
       const poolsResolved = await Promise.all(poolPromises);
@@ -175,11 +213,10 @@ const IndexPage = () => {
             if (!grant) break;
 
             totalGrants++;
-            const vestedRaw = await vestingContract.vestedAmount(address, i);
+            const vestedRaw = BigInt(await vestingContract.vestedAmount(address, i));
             const releasedRaw = BigInt(grant.released ?? 0n);
             totalReleased += releasedRaw;
-            const vestedBI = BigInt(vestedRaw ?? 0n);
-            totalClaimable += vestedBI > releasedRaw ? vestedBI - releasedRaw : 0n;
+            totalClaimable += vestedRaw > releasedRaw ? vestedRaw - releasedRaw : 0n;
           } catch {
             break;
           }
@@ -201,6 +238,7 @@ const IndexPage = () => {
 
   fetchAll();
 }, [address, LEAG, LionEagleStakingManager, VestingLEAG, signer]);
+
 
   // ... keep all modal handlers, claimAll, helpers, and JSX unchanged
 
@@ -350,7 +388,7 @@ const IndexPage = () => {
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-black via-amber-900 to-black text-amber-400">
-        <Header />
+        <NavBar />
         {(pageLoading || loading) && <Loader />}
 
         {notification && (
